@@ -11,7 +11,7 @@ func At(t time.Time, fn func()) {
 }
 
 // Runs until time in every dur.
-func Util(t time.Time, dur time.Duration, fn func()) {
+func Until(t time.Time, dur time.Duration, fn func()) {
 	if time.Now().Sub(t) > 0 {
 		After(dur, func() {
 			fn()
