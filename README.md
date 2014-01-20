@@ -2,7 +2,7 @@
 
 [![Build Status](https://travis-ci.org/rakyll/coop.png?branch=master)](https://travis-ci.org/rakyll/coop)
 
-coop contains some of the most common concurrent program flows I personally use in Go. I'm suggesting you to use this package as a snippets reference/cheat sheet instead of a library. The functionally provided in this package can be obtained in many different ways, and frankly in  more performant ways depending on the type of your problem.
+coop contains some of the most common concurrent program flows I personally use in Go. I'm suggesting you to use this package as a snippets reference/cheat sheet instead of a library. The functionally provided in this package can be obtained in many different ways, and frankly with more performant implementations depending on the type of your problem.
 
 coop contains implementations for the following flows:
 
