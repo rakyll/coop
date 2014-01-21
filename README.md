@@ -44,7 +44,7 @@ done := coop.After(time.Second, func() {
 Runs fn once in every duration, and never stops. The following example will print "Hello World" once in every second.
 
 ~~~ go
-coop.After(time.Second, func() {
+coop.Every(time.Second, func() {
     fmt.Println("Hello world")
 })
 ~~~
