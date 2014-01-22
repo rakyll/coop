@@ -83,7 +83,7 @@ func Timeout(duration time.Duration, fn func()) (done <-chan bool) {
 
 // Starts a job and returns a channel for cancellation signal.
 // Once a message is sent to the channel, stops the fn.
-func Die(fn func()) (die chan<- bool, done <-chan bool) {
+func Killable(fn func()) (kill chan<- bool, done <-chan bool) {
 	ch := make(chan bool)
 	dch := make(chan bool)
 	go func() {

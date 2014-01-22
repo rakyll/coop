@@ -104,20 +104,20 @@ func TestTimeout_Completed(test *testing.T) {
 	}
 }
 
-func TestDie_Dead(test *testing.T) {
-	die, done := Die(func() {
+func TestKillable_Killed(test *testing.T) {
+	kill, done := Killable(func() {
 		time.Sleep(time.Minute)
 	})
 	time.AfterFunc(50*time.Millisecond, func() {
-		die <- true
+		kill <- true
 	})
 	if <-done {
 		test.Errorf("Expected to be dead, but it didn't")
 	}
 }
 
-func TestDie_Completed(test *testing.T) {
-	_, done := Die(func() {
+func TestKillable_Completed(test *testing.T) {
+	_, done := Killable(func() {
 		time.Sleep(100 * time.Millisecond)
 	})
 	if !<-done {

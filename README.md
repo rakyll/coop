@@ -60,16 +60,16 @@ done := coop.Timeout(time.Second, func() {
 <-done // will return false, because timeout occurred
 ~~~
 
-### coop.Die(fn)
-Runs fn and returns a signal to enable job cancellation. Once a message is sent to the cancellation channel, Die returns immediately before waiting for fn to be completed.
+### coop.Killable(fn)
+Runs fn and returns a signal to enable job cancellation. Once a message is sent to the cancellation channel, Killable returns immediately before waiting for fn to be completed.
 
 ~~~ go
-cancel, done := coop.Die(func() {
+kill, done := coop.Killable(func() {
     time.Sleep(time.Hour)
     fmt.Println("Hello world")
 })
 coop.After(time.Minute, func() {
-    cancel <- true // sends a cancel message after a minute
+    kill <- true // sends a kill message after a minute
 })
 <-done // It will receive false after the cancellation
 ~~~
