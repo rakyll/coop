@@ -30,7 +30,7 @@ func At(t time.Time, fn func()) (done <-chan bool) {
 
 // Runs until time in every dur.
 func Until(t time.Time, dur time.Duration, fn func()) (done <-chan bool) {
-	ch := make(chan bool)
+	ch := make(chan bool, 1)
 	go untilRecv(ch, t, dur, fn)
 	return ch
 }
@@ -48,7 +48,7 @@ func untilRecv(ch chan bool, t time.Time, dur time.Duration, fn func()) {
 
 // Runs fn after duration. Similar to time.AfterFunc
 func After(duration time.Duration, fn func()) (done <-chan bool) {
-	ch := make(chan bool)
+	ch := make(chan bool, 1)
 	time.AfterFunc(duration, func() {
 		fn()
 		ch <- true
@@ -69,7 +69,7 @@ func Every(dur time.Duration, fn func()) {
 // channel if timeout occurs.
 // TODO: cancel if timeout occurs
 func Timeout(duration time.Duration, fn func()) (done <-chan bool) {
-	ch := make(chan bool)
+	ch := make(chan bool, 2)
 	go func() {
 		<-time.After(duration)
 		ch <- false
@@ -84,8 +84,8 @@ func Timeout(duration time.Duration, fn func()) (done <-chan bool) {
 // Starts a job and returns a channel for cancellation signal.
 // Once a message is sent to the channel, stops the fn.
 func Killable(fn func()) (kill chan<- bool, done <-chan bool) {
-	ch := make(chan bool)
-	dch := make(chan bool)
+	ch := make(chan bool, 2)
+	dch := make(chan bool, 1)
 	go func() {
 		<-dch
 		ch <- false
@@ -93,6 +93,7 @@ func Killable(fn func()) (kill chan<- bool, done <-chan bool) {
 	go func() {
 		fn()
 		ch <- true
+		dch <- true
 	}()
 	return dch, ch
 }
@@ -102,7 +103,7 @@ func All(fns ...func()) (done <-chan bool) {
 	var wg sync.WaitGroup
 	wg.Add(len(fns))
 
-	ch := make(chan bool)
+	ch := make(chan bool, 1)
 	for _, fn := range fns {
 		go func(f func()) {
 			f()
@@ -119,7 +120,7 @@ func All(fns ...func()) (done <-chan bool) {
 // Starts to run the given list of fns concurrently,
 // at most n fns at a time.
 func AllWithThrottle(throttle int, fns ...func()) (done <-chan bool) {
-	ch := make(chan bool)
+	ch := make(chan bool, 1)
 	go func() {
 		for {
 			num := throttle
@@ -142,7 +143,7 @@ func AllWithThrottle(throttle int, fns ...func()) (done <-chan bool) {
 func Replicate(n int, fn func()) (done <-chan bool) {
 	var wg sync.WaitGroup
 	wg.Add(n)
-	ch := make(chan bool)
+	ch := make(chan bool, 1)
 	for i := 0; i < n; i++ {
 		go func() {
 			fn()
