@@ -31,7 +31,7 @@ func At(t time.Time, fn func()) (done <-chan bool) {
 // Runs until time in every dur.
 func Until(t time.Time, dur time.Duration, fn func()) (done <-chan bool) {
 	ch := make(chan bool, 1)
-	go untilRecv(ch, t, dur, fn)
+	untilRecv(ch, t, dur, fn)
 	return ch
 }
 
