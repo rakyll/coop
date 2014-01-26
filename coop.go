@@ -143,8 +143,7 @@ func AllWithThrottle(throttle int, fns ...func()) (done <-chan bool) {
 func Replicate(n int, fn func()) (done <-chan bool) {
 	funcs := make([]func(), n)
 	for i := 0; i < n; i++ {
-		funcs[i] = fn;
+		funcs[i] = fn
 	}
-	return All(funcs...);
+	return All(funcs...)
 }
-
