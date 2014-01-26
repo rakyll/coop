@@ -141,18 +141,10 @@ func AllWithThrottle(throttle int, fns ...func()) (done <-chan bool) {
 
 // Run the same function with n copies.
 func Replicate(n int, fn func()) (done <-chan bool) {
-	var wg sync.WaitGroup
-	wg.Add(n)
-	ch := make(chan bool, 1)
+	funcs := make([]func(), n)
 	for i := 0; i < n; i++ {
-		go func() {
-			fn()
-			wg.Done()
-		}()
+		funcs[i] = fn;
 	}
-	go func() {
-		wg.Wait()
-		ch <- true
-	}()
-	return ch
+	return All(funcs...);
 }
+
