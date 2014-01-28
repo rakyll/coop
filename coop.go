@@ -139,6 +139,44 @@ func AllWithThrottle(throttle int, fns ...func()) (done <-chan bool) {
 	return ch
 }
 
+// Starts to run the given list of fns concurrently,
+// at most c fns at a time.
+func AllWithLimit(c int, fns ...func()) (done <-chan bool) {
+	if c <= 0 || c > len(fns) {
+		c = len(fns)
+	}
+	var wg sync.WaitGroup
+	// This channel will signal when all fns are completed.
+	ch := make(chan bool, 1)
+	// Funcs are pushed through this channel.
+	funcs := make(chan func())
+	wg.Add(len(fns))
+
+	go func() {
+		// Start throttle amount of workers
+		for i := 0; i < c; i++ {
+			// These goroutines will run until channel is closed
+			go func() {
+				// Pick one fn from channel
+				for fn := range funcs {
+					fn()
+					wg.Done()
+				}
+			}()
+		}
+		// Push all fns to channel, it will be blocked when all workers are busy.
+		for _, fn := range fns {
+			funcs <- fn
+		}
+		close(funcs)
+		// Wait until all worker goroutines are done.
+		wg.Wait()
+		// Signal completion.
+		ch <- true
+	}()
+	return ch
+}
+
 // Run the same function with n copies.
 func Replicate(n int, fn func()) (done <-chan bool) {
 	funcs := make([]func(), n)

@@ -164,6 +164,38 @@ func TestAllWithThrottle(test *testing.T) {
 	}
 }
 
+const n = 10
+
+func TestAllWithLimit(test *testing.T) {
+	// Test 1..n concurrency combinations
+	for c := 1; c < n; c++ {
+		fns := make([]func(), n)
+		out := make(chan int, n)
+		for i := 0; i < n; i++ {
+			// TODO(mdakin): Investigate why closure can be bound to val but not i for values [0-n)
+			val := i
+			fns[i] = func() {
+				out <- val
+			}
+		}
+		done := AllWithLimit(c, fns...)
+		<-done
+		close(out)
+		var o [n]int
+		for i := range out {
+			if i < 0 || i >= n {
+				test.Errorf("Unexpected fn output: %v Expected[0-%v)", i, n)
+			}
+			o[i] = i
+		}
+		for i := 0; i < n; i++ {
+			if i != o[i] {
+				test.Errorf("Expected fn[%v] to completed but it was not.", i)
+			}
+		}
+	}
+}
+
 func TestReplicate(test *testing.T) {
 	results := make(chan bool, 5)
 	done := Replicate(5, func() {
