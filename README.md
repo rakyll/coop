@@ -60,20 +60,6 @@ done := coop.Timeout(time.Second, func() {
 <-done // will return false, because timeout occurred
 ~~~
 
-### coop.Killable(fn)
-Runs fn and returns a signal to enable job cancellation. Once a message is sent to the cancellation channel, Killable returns immediately before waiting for fn to be completed.
-
-~~~ go
-kill, done := coop.Killable(func() {
-    time.Sleep(time.Hour)
-    fmt.Println("Hello world")
-})
-coop.After(time.Minute, func() {
-    kill <- true // sends a kill message after a minute
-})
-<-done // It will receive false after the cancellation
-~~~
-
 ### coop.All(fns...)
 Runs the list of fns concurrently, returns a boolean channel that will receive a message after all of the fns are completed. The following example will start 4 printing jobs concurrently and wait until all of them are completed.
 

@@ -43,7 +43,7 @@ func untilRecv(ch chan bool, t time.Time, dur time.Duration, fn func()) {
 		})
 		return
 	}
-	ch <- true
+	doneSig(ch, true)
 }
 
 // Runs fn after duration. Similar to time.AfterFunc
@@ -51,7 +51,7 @@ func After(duration time.Duration, fn func()) (done <-chan bool) {
 	ch := make(chan bool, 1)
 	time.AfterFunc(duration, func() {
 		fn()
-		ch <- true
+		doneSig(ch, true)
 	})
 	return ch
 }
@@ -72,30 +72,13 @@ func Timeout(duration time.Duration, fn func()) (done <-chan bool) {
 	ch := make(chan bool, 2)
 	go func() {
 		<-time.After(duration)
-		ch <- false
+		doneSig(ch, false)
 	}()
 	go func() {
 		fn()
-		ch <- true
+		doneSig(ch, true)
 	}()
 	return ch
-}
-
-// Starts a job and returns a channel for cancellation signal.
-// Once a message is sent to the channel, stops the fn.
-func Killable(fn func()) (kill chan<- bool, done <-chan bool) {
-	ch := make(chan bool, 2)
-	dch := make(chan bool, 1)
-	go func() {
-		<-dch
-		ch <- false
-	}()
-	go func() {
-		fn()
-		ch <- true
-		dch <- true
-	}()
-	return dch, ch
 }
 
 // Starts to run the given list of fns concurrently.
@@ -112,7 +95,7 @@ func All(fns ...func()) (done <-chan bool) {
 	}
 	go func() {
 		wg.Wait()
-		ch <- true
+		doneSig(ch, true)
 	}()
 	return ch
 }
@@ -131,7 +114,7 @@ func AllWithThrottle(throttle int, fns ...func()) (done <-chan bool) {
 			fns = fns[num:]
 			<-All(next...)
 			if len(fns) == 0 {
-				ch <- true
+				doneSig(ch, true)
 				break
 			}
 		}
@@ -146,4 +129,9 @@ func Replicate(n int, fn func()) (done <-chan bool) {
 		funcs[i] = fn
 	}
 	return All(funcs...)
+}
+
+func doneSig(ch chan bool, val bool) {
+	ch <- val
+	close(ch)
 }
