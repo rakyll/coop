@@ -67,18 +67,30 @@ func Every(dur time.Duration, fn func()) {
 // Runs fn and times out if it runs longer than the provided
 // duration. It will send false to the returning
 // channel if timeout occurs.
-// TODO: cancel if timeout occurs
 func Timeout(duration time.Duration, fn func()) (done <-chan bool) {
-	ch := make(chan bool, 2)
+	kill, done := Die(fn)
+	// After time limit, kill the function
+	time.Sleep(duration)
+	kill <- true
+	return done
+}
+
+// Die starts a job and returns channels
+// for function callelation signal.
+// Once a message is sent to the channel 'kill'
+// it will stops the fn, because the enclosing function returns.
+func Die(fn func()) (kill chan<- bool, done <-chan bool) {
+	ch := make(chan bool)
+	dch := make(chan bool)
 	go func() {
-		<-time.After(duration)
-		doneSig(ch, false)
+		<-dch
+		ch <- false
 	}()
 	go func() {
 		fn()
-		doneSig(ch, true)
+		ch <- true
 	}()
-	return ch
+	return dch, ch
 }
 
 // Starts to run the given list of fns concurrently.
