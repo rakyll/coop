@@ -64,23 +64,6 @@ func Every(dur time.Duration, fn func()) {
 	})
 }
 
-// Runs fn and times out if it runs longer than the provided
-// duration. It will send false to the returning
-// channel if timeout occurs.
-// TODO: cancel if timeout occurs
-func Timeout(duration time.Duration, fn func()) (done <-chan bool) {
-	ch := make(chan bool, 2)
-	go func() {
-		<-time.After(duration)
-		doneSig(ch, false)
-	}()
-	go func() {
-		fn()
-		doneSig(ch, true)
-	}()
-	return ch
-}
-
 // Starts to run the given list of fns concurrently.
 func All(fns ...func()) (done <-chan bool) {
 	var wg sync.WaitGroup
