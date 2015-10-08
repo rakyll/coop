@@ -86,24 +86,6 @@ func TestUntil_Past(test *testing.T) {
 	}
 }
 
-func TestTimeout_TimedOut(test *testing.T) {
-	done := Timeout(100*time.Millisecond, func() {
-		time.Sleep(time.Minute)
-	})
-	if <-done {
-		test.Errorf("Expected to get timed out, but it has been completed")
-	}
-}
-
-func TestTimeout_Completed(test *testing.T) {
-	done := Timeout(time.Minute, func() {
-		time.Sleep(100 * time.Millisecond)
-	})
-	if !<-done {
-		test.Errorf("Expected to get completed, but it has been timed out")
-	}
-}
-
 func TestAll(test *testing.T) {
 	start := time.Now()
 	var val1, val2, val3 bool
