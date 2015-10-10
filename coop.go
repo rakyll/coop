@@ -104,20 +104,28 @@ func All(fns ...func()) (done <-chan bool) {
 // at most n fns at a time.
 func AllWithThrottle(throttle int, fns ...func()) (done <-chan bool) {
 	ch := make(chan bool, 1)
+	if throttle > len(fns) {
+		throttle = len(fns)
+	}
+	tch := make(chan struct{}, throttle)
+	for i := 0; i < throttle; i++ {
+		tch <- struct{}{}
+	}
+	var wg sync.WaitGroup
+	wg.Add(len(fns))
 	go func() {
-		for {
-			num := throttle
-			if throttle > len(fns) {
-				num = len(fns)
-			}
-			next := fns[:num]
-			fns = fns[num:]
-			<-All(next...)
-			if len(fns) == 0 {
-				doneSig(ch, true)
-				break
-			}
+		for _, fn := range fns {
+			<-tch
+			go func() {
+				fn()
+				tch <- struct{}{}
+				wg.Done()
+			}()
 		}
+	}()
+	go func() {
+		wg.Wait()
+		doneSig(ch, true)
 	}()
 	return ch
 }
