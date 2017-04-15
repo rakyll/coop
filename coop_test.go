@@ -127,12 +127,12 @@ func TestAll(test *testing.T) {
 	}
 }
 
-func TestAllWithThrottle(test *testing.T) {
+func TestAllInBatches(test *testing.T) {
 	start := time.Now()
 	fn := func() {
 		time.Sleep(100 * time.Millisecond)
 	}
-	done := AllWithThrottle(3, fn, fn, fn, fn, fn)
+	done := AllInBatches(3, fn, fn, fn, fn, fn)
 	<-done
 	diff := time.Now().Sub(start)
 	if diff > 205*time.Millisecond {
@@ -140,6 +140,38 @@ func TestAllWithThrottle(test *testing.T) {
 	}
 	if diff < 105*time.Millisecond {
 		test.Errorf("All with throttle doesn't take long, throttling may not work")
+	}
+}
+
+const n = 10
+
+func TestAllByWorkerPool(test *testing.T) {
+	// Test 1..n concurrency (pool size) combinations.
+	for c := 1; c < n; c++ {
+		fns := make([]func(), n)
+		out := make(chan int, n)
+		for i := 0; i < n; i++ {
+			//We just want to capture value of i.
+			val := i
+			fns[i] = func() {
+				out <- val
+			}
+		}
+		done := AllByWorkerPool(c, fns...)
+		<-done
+		close(out)
+		var o [n]int
+		for i := range out {
+			if i < 0 || i >= n {
+				test.Errorf("Unexpected fn output: %v. Expected values: [0-%v).", i, n)
+			}
+			o[i] = i
+		}
+		for i := 0; i < n; i++ {
+			if i != o[i] {
+				test.Errorf("Expected fn[%v] to be completed but it was not.", i)
+			}
+		}
 	}
 }
 
